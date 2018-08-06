@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+         <title>Message</title>
+</head>
+
+<body onload="jolly()" >
+<form action="insert" method="POST" enctype="multipart/form-data">
+
+    <br>Msg: <input type="text" name="msg"  onfocus="mytask()" onblur="jolly()">
+    <br><input type="submit" value="Send" >
+</form>
+<form action="lout" method="GET">
+<br> <input type="submit" value="logout">
+
+</form>
+{% for e in name%}
+
+       <h3> {{ e.name}} : {{ e.msg}} </h3>
+        <h5>{{e.time}}</h5>
+{% endfor %}
+ <script>
+ var myVar;
+ var ref='http://192.168.1.117:8000/project/insert';
+ function jolly()
+ {
+
+ myVar=setInterval('window.location.assign(ref);', 2000);
+}
+
+function mytask()
+{
+ clearInterval(myVar);
+
+}
+</script>
+</body>
+
+
+
+
+</html>
