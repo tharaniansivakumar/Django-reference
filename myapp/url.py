@@ -4,7 +4,7 @@ from django.conf.urls import url
 
 from myapp.views import index, detail, indexs, details, register, login, logout, reset_password, mail_verification, \
     forgot_password, csv_open, csv_read, total_price, total, insert, lout, xml_read, xml_zeep, xml_fetch, image_store, \
-    image_fetch, pdf_generator, excel_rec, html_pdf
+    image_fetch, pdf_generator, excel_rec, html_pdf, query_join
 from myapp import views
 
 urlpatterns =[
@@ -32,6 +32,6 @@ urlpatterns =[
     url(r'^pdf$', pdf_generator, name="pdf"),
     url(r'^excel', excel_rec, name="excel"),
     url(r'^pdfcheck', html_pdf, name="pdfcheck"),
-
+    url(r'^query', query_join, name="query"),
 
 ]

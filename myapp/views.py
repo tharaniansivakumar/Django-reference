@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import datetime
 import os
 
+import jwt
 from PyPDF2.pdf import BytesIO
 from django.template.loader import get_template
 
@@ -28,6 +29,7 @@ from django.core.mail import EmailMessage
 import uuid
 import csv
 from django.db import connection
+from django.db.models.sql import query
 from rest_framework.decorators import api_view
 import xmltodict
 import base64
@@ -35,6 +37,13 @@ from reportlab.pdfgen import canvas
 
 
 # Create your views here.
+
+
+def token_value(request):
+    auth = request.META.get('HTTP_AUTHORIZATION')
+    token = auth.split()
+    payload = dict(jwt.decode(token[1], "SECRET_KEY"))
+    return payload
 
 def succes(di):
     dic = dict()
@@ -107,18 +116,21 @@ def register(request):
     obj.save()
     return HttpResponse("<h2> Registered successfully</h2>")
 
-
+@api_view(['POST'])
 def login(request):
     js = json.loads(request.body)
-    if request.session._session:
-        return HttpResponse("<h1> u r already login </h2>")
+    # if request.session._session:
+    #     return HttpResponse("<h1> u r already login </h2>")
+    #   Member.objects.filter(m_username=js['username'], m_password=make_password(js['password'], salt=SALT_KEY)
+
+    if (Member.objects.filter(m_username=js['username'], m_password=js['password'])):
+        id = js['username']
+        tok_val = jwt.encode({'id': id}, "SECRET_KEY")
+        print (tok_val)
+        tok = {'token': "Token " + tok_val}
+        return JsonResponse(tok)
     else:
-        if (Member.objects.filter(m_username=js['username'], m_password=make_password(js['password'], salt=SALT_KEY))):
-            request.session["username"] = js['username']
-            request.session.set_expiry(12 * 60 * 60)
-            return HttpResponse("<h3> lOGIN SUCCESSFULLY</h3>")
-        else:
-            return HttpResponse("</h4> Invalid username and password</h4>")
+        return HttpResponse("</h4> Invalid username and password</h4>")
 
 
 @api_view(['GET'])
@@ -206,7 +218,7 @@ def total_price(request):
         li = []
         for i in rows:
             di = dict()
-            di["first_aname"] = i[0]
+            di["first_name"] = i[0]
             di["product_name"] = i[1]
             di["total_price"] = int(i[2])
             li.append(di)
@@ -259,23 +271,23 @@ def insert(request):
         return render(request, 'index.html', sample)
     else:
         return render(request, 'login.html', {})
-
-
-def login(request):
-    try:
-        if 'user' in request.POST:
-            username = request.POST.get('user')
-            password = request.POST.get('pass')
-            if (Member.objects.filter(m_username=username, m_password=password)):
-                request.session["username"] = username
-                print(username)
-                sample = {"temp": "http://192.168.1.117:8000/project/insert"}
-                # request.sesion.set_expiry(12 * 60 * 60)
-                return render(request, 'index.html', {})
-        else:
-            return render(request, 'login.html', {})
-    except Exception as e:
-        return HttpResponse(e)
+#
+#
+# def login(request):
+#     try:
+#         if 'user' in request.POST:
+#             username = request.POST.get('user')
+#             password = request.POST.get('pass')
+#             if (Member.objects.filter(m_username=username, m_password=password)):
+#                 request.session["username"] = username
+#                 print(username)
+#                 sample = {"temp": "http://192.168.1.117:8000/project/insert"}
+#                 # request.sesion.set_expiry(12 * 60 * 60)
+#                 return render(request, 'index.html', {})
+#         else:
+#             return render(request, 'login.html', {})
+#     except Exception as e:
+#         return HttpResponse(e)
 
 
 def lout(request):
@@ -421,3 +433,15 @@ def html_pdf(request):
     m = list(Message.objects.all().values())
     val = {"content": m}
     return render('demo.html', val)
+
+def query_join(request):
+    sales=Sale.objects.extra( select={'first_name': 'customer_id__first_name','last_name': 'customer_id__last_name'})
+    values={
+        'sale_id',
+        'customer_id',
+        'customer_id__first_name'
+        'customer_id__last_name'
+}
+    m= sales.query.join(values)
+    print(m)
+
