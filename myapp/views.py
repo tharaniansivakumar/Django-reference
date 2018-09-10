@@ -5,6 +5,7 @@ import datetime
 import os
 
 import jwt
+import requests
 from PyPDF2.pdf import BytesIO
 from django.template.loader import get_template
 
@@ -38,12 +39,12 @@ from reportlab.pdfgen import canvas
 
 # Create your views here.
 
-
-def token_value(request):
-    auth = request.META.get('HTTP_AUTHORIZATION')
-    token = auth.split()
-    payload = dict(jwt.decode(token[1], "SECRET_KEY"))
-    return payload
+#
+# def token_value(request):
+#     auth = request.META.get('HTTP_AUTHORIZATION')
+#     token = auth.split()
+#     payload = dict(jwt.decode(token[1], "SECRET_KEY"))
+#     return payload
 
 def succes(di):
     dic = dict()
@@ -115,6 +116,7 @@ def register(request):
     obj.m_password = make_password(js['password'], salt=SALT_KEY)
     obj.save()
     return HttpResponse("<h2> Registered successfully</h2>")
+
 
 @api_view(['POST'])
 def login(request):
@@ -271,6 +273,8 @@ def insert(request):
         return render(request, 'index.html', sample)
     else:
         return render(request, 'login.html', {})
+
+
 #
 #
 # def login(request):
@@ -424,24 +428,142 @@ def render(path=None, params=None):
     pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), response)
 
     if not pdf.err:
-        return HttpResponse(response.getvalue(), content_type='application/pdf')
+        # return HttpResponse(response.getvalue(),content_type="application/pdf")
+        response = HttpResponse(response.getvalue(), content_type="application/pdf")
+        response['Content-Disposition'] = 'inline;filename=download.pdf'
+        return response
     else:
         return HttpResponse("Error Rendering PDF", status=400)
 
 
 def html_pdf(request):
-    m = list(Message.objects.all().values())
+    m = list(Member.objects.all().values())
     val = {"content": m}
     return render('demo.html', val)
 
+
 def query_join(request):
-    sales=Sale.objects.extra( select={'first_name': 'customer_id__first_name','last_name': 'customer_id__last_name'})
-    values={
+    sales = Sale.objects.extra(select={'first_name': 'customer_id__first_name', 'last_name': 'customer_id__last_name'})
+    values = {
         'sale_id',
         'customer_id',
         'customer_id__first_name'
         'customer_id__last_name'
-}
-    m= sales.query.join(values)
+    }
+    m = sales.query.join(values)
     print(m)
 
+
+def thirdparty(request):
+    r = requests.get('http://127.0.0.1:8000/api/v1/crud-controller/user?search_key=id&search_value=1')
+    result = json.loads(r.text)
+    if (result):
+        return JsonResponse(result, safe=False)
+    return HttpResponse("Failed")
+
+
+def dynamic_table(request):
+    try:
+        # class Meta:
+        #     app_label = 'myapp'
+
+        table = create_model(name='demo', fields={
+            'first': models.CharField(max_length=255),
+            'last_name': models.CharField(max_length=255),
+        }, app_label='myapp')
+        from django.core.management import call_command
+        call_command('makemigrations')
+        call_command('migrate')
+    except:
+        print("Except")
+    return HttpResponse("Done")
+
+
+def class_instance(request):
+    try:
+        table = create_model(name='demo', fields={
+            'first_Name': models.CharField(max_length=255),
+            'last_name': models.CharField(max_length=255),
+        }, app_label='myapp')
+        from django.core.management import call_command
+        ins=sample("tharani")
+        call_command('makemigrations')
+        call_command('migrate')
+        # val = sample(table)
+        # return val
+    except Exception as e:
+        print(e)
+    return HttpResponse("hello")
+
+
+def create_model(name, fields=None, app_label='', module='', options=None, admin_opts=None):
+    """
+    Create specified model
+    """
+
+    class Meta:
+        db_table = name
+        # Using type('Meta', ...) gives a dictproxy error during model creation
+        pass
+
+    if app_label:
+        # app_label must be set using the Meta inner class
+        setattr(Meta, 'app_label', app_label)
+
+    # Update Meta with any options that were provided
+    if options is not None:
+        for key, value in options.iteritems():
+            setattr(Meta, key, value)
+
+    # Set up a dictionary to simulate declarations within a class
+    attrs = {'__module__': module, 'Meta': Meta}
+
+    # Add in any fields that were provided
+    if fields:
+        attrs.update(fields)
+
+    # Create the class, which automatically triggers ModelBase processing
+    model = type(str(name), (models.Model,), attrs)
+    print (model)
+    return model
+
+
+def sample(table):
+    try:
+        tab = create_model(name=table, app_label='myapp')
+    except Exception as e:
+        print(e)
+    return tab
+
+# def dynamic_reference(table):
+# dic = {
+#     'first_name': models.CharField(max_length=255),
+#     'last_name': models.CharField(max_length=255),
+#     '__module__': dynamic_table.__module__,
+#     'Meta': Meta
+# }
+# name=str("Person")
+# Person = type(name, (models.Model,), dic)
+# table_name = "person"
+# data = list(ContentType.objects.filter(model=table_name).values('app_label'))[0]
+# print(data)
+# ct = ContentType.objects.get(model='book')
+# model = ct.model_class()
+
+# model = apps.get_model(app_label=data['app_label'], model_name=table_name.lower())
+# print(model)
+# return HttpResponse("DOne")
+
+def model_file(request):
+    # js=json.loads(request.body.decode)
+    li=[]
+    li=[{"contents":"\nclass tharani(models.Model):\n\
+    first_Name= models.CharField(max_length=255),\n\
+    last_name= models.CharField(max_length=255),\n\
+    class Meta:\n   \
+    db_table="+'"tharani"'}]
+    f=open("/home/divum/Desktop/myproject/firstproject/myapp/models.py","a")
+    f.writelines(li[0]["contents"])
+    # a=f.read()
+    # print(a)
+    return HttpResponse("success")
