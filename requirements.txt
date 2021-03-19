@@ -91,7 +91,7 @@ idna==2.6
 ipaddress==1.0.22
 isodate==0.6.0
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.11.3
 jmespath==0.9.3
 juspay==1.1.2
 keyring==10.4.0
