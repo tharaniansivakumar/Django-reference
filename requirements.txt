@@ -140,7 +140,7 @@ PyYAML==3.13
 reportlab==3.5.2
 requests==2.19.1
 requests-toolbelt==0.8.0
-rsa==3.4.2
+rsa==4.1
 s3transfer==0.1.13
 SecretStorage==2.3.1
 serialization==1.2.0
