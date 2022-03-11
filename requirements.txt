@@ -112,7 +112,7 @@ path.py==7.7.1
 patterns==0.3
 pdfrw==0.4
 pexpect==3.1
-Pillow==2.3.0
+Pillow==9.0.1
 pisa==3.0.33
 piston-mini-client==0.7.5
 ply==3.8
