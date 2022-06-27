@@ -137,7 +137,7 @@ python-decouple==3.1
 pytz==2018.5
 pyxdg==0.25
 PyYAML==3.13
-reportlab==3.5.2
+reportlab==3.5.55
 requests==2.19.1
 requests-toolbelt==0.8.0
 rsa==3.4.2
